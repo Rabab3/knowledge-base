@@ -18,4 +18,8 @@ public class Role {
     @Enumerated(EnumType.STRING)  // Utilisation de l'énumération sous forme de chaîne
     @Column(length = 20, nullable = false, unique = true)
     private ERole name;
+
+    public void setName(ERole name) {
+        this.name = name;
+    }
 }
