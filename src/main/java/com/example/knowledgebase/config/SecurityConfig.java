@@ -60,20 +60,25 @@ public class SecurityConfig {
                 .cors().and()
                 .csrf().disable()
                 .authorizeHttpRequests(authz -> authz
+                        // routes publiques
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/contribute/articles").permitAll() // 👈 accès public temporaire
+                        .requestMatchers("/api/contribute/articles").permitAll() // 👈 test temporaire ici
+                        // règles protégées
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/moderation/**").hasAnyRole("MODERATEUR", "ADMIN")
-                        .requestMatchers("/api/contribute/**").hasAnyRole("CONTRIBUTEUR", "MODERATEUR", "ADMIN")
+                        // ⚠ supprime ou commente TEMPORAIREMENT cette ligne pendant ton test
+                        // .requestMatchers("/api/contribute/**").hasAnyRole("CONTRIBUTEUR", "MODERATEUR", "ADMIN")
                         .requestMatchers("/api/view/**").hasAnyRole("LECTEUR", "CONTRIBUTEUR", "MODERATEUR", "ADMIN")
-                        .anyRequest().authenticated()
-                )
-;
+//                        .requestMatchers("/api/articles/**").hasAnyRole("CONTRIBUTEUR", "MODERATEUR", "ADMIN", "LECTEUR")
+                                .requestMatchers("/api/articles/**").permitAll() // si tu veux tester sans JWT
 
-        // 🔐 Ajoute le filtre JWT AVANT le filtre UsernamePasswordAuthenticationFilter
+                        .anyRequest().authenticated()
+                );
+
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 }

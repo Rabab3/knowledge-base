@@ -10,14 +10,19 @@ public class UserDto {
 
     private Long id;
 
-    @Email
-    @NotBlank
+    @NotBlank(message = "L'email est obligatoire")
+    @Email(message = "L'email n'est pas valide")
     private String email;
 
-    @NotEmpty
+    @NotBlank(message = "Le mot de passe est obligatoire")
+    private String password;
+
+    @NotBlank(message = "Le nom est obligatoire")
+    private String nom;
+
+    @NotBlank(message = "Le prénom est obligatoire")
+    private String prenom;
+
+    @NotEmpty(message = "Au moins un rôle doit être sélectionné")
     private Set<String> roles;
 }
-
-
-
-

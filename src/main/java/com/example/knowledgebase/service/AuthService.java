@@ -10,6 +10,8 @@ import com.example.knowledgebase.repository.RoleRepository;
 import com.example.knowledgebase.repository.UserRepository;
 import com.example.knowledgebase.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -76,13 +78,15 @@ public class AuthService {
         userRepository.save(user);
     }
 
-
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
+// @PostConstruct
     public void initDefaultUser() {
         if (!userRepository.existsByEmail("contributeur@email.com")) {
             User user = new User();
             user.setEmail("contributeur@email.com");
             user.setPassword(passwordEncoder.encode("123456"));
+            user.setNom("Contributeur");
+            user.setPrenom("Test");
 
             Role role = roleRepository.findByName(ERole.ROLE_CONTRIBUTEUR)
                     .orElseThrow(() -> new RuntimeException("Rôle CONTRIBUTOR non trouvé"));
@@ -95,6 +99,7 @@ public class AuthService {
     }
 
 
+ 
 
 
 }

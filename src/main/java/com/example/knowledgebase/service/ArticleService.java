@@ -22,15 +22,16 @@ public class ArticleService {
     private final ArticleMapper articleMapper;
 
     public ArticleDto create(ArticleDto dto, String email) {
-        User author = getOrFakeUser(email);
+        User author = getOrFakeUser(email); // ou sans paramètre
 
         Article article = articleMapper.toEntity(dto, author);
         article.setCreationDate(LocalDateTime.now());
         article.setModificationDate(null);
-        article.setStatus(ArticleStatus.EN_ATTENTE); // statut initial
+        article.setStatus(ArticleStatus.EN_ATTENTE);
 
         return articleMapper.toDto(articleRepository.save(article));
     }
+
 
     public List<ArticleDto> getByAuthor(String email) {
         User author = getOrFakeUser(email);
@@ -41,14 +42,9 @@ public class ArticleService {
     }
 
     private User getOrFakeUser(String email) {
-        return userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    User fake = new User();
-                    fake.setId(999L);
-                    fake.setEmail(email);
-                    fake.setNom("Test");
-                    fake.setPrenom("User");
-                    return fake;
-                });
+        // ❗ Utilise un utilisateur existant pour les tests sans token
+        return userRepository.findByEmail("contributeur@email.com")
+                .orElseThrow(() -> new RuntimeException("Utilisateur de test non trouvé"));
     }
+
 }

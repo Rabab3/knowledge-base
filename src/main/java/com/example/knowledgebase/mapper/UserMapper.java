@@ -9,6 +9,12 @@ import java.util.stream.Collectors;
 @Component
 public class UserMapper {
 
+    public User toEntity(UserDto dto) {
+        User user = new User();
+        user.setEmail(dto.getEmail());
+        // Les autres champs comme nom, prénom, mot de passe doivent venir d’un autre DTO si besoin
+        return user;
+    }
     public UserDto toDto(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());

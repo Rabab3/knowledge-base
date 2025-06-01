@@ -9,7 +9,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 
-@Component
+@Component  
 @RequiredArgsConstructor
 public class DataInitializer {
 

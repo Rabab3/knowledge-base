@@ -2,7 +2,6 @@ package com.example.knowledgebase.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import com.example.knowledgebase.model.ERole;  // Assurez-vous d'importer l'énumération ERole
 
 @Entity
 @Table(name = "roles")
@@ -15,11 +14,9 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)  // Utilisation de l'énumération sous forme de chaîne
+    @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false, unique = true)
     private ERole name;
 
-    public void setName(ERole name) {
-        this.name = name;
-    }
+    // Supprimer setName() manuel si inutile
 }
