@@ -3,12 +3,15 @@ package com.example.knowledgebase.service;
 import com.example.knowledgebase.dto.JwtResponse;
 import com.example.knowledgebase.dto.LoginRequest;
 import com.example.knowledgebase.dto.RefreshTokenRequest;
+import com.example.knowledgebase.model.ERole;
 import com.example.knowledgebase.model.Role;
 import com.example.knowledgebase.model.User;
 import com.example.knowledgebase.repository.RoleRepository;
 import com.example.knowledgebase.repository.UserRepository;
 import com.example.knowledgebase.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.annotation.PostConstruct; // N'oublie pas cet import
 
 @Service
 @RequiredArgsConstructor
@@ -62,8 +67,9 @@ public class AuthService {
         }
 
         Set<Role> roles = new HashSet<>();
-        Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("Role USER non trouvé"));
+
+        Role userRole = roleRepository.findByName(ERole.ROLE_ADMIN)
+                .orElseThrow(() -> new RuntimeException("Role ADMIN non trouvé")); // correction du message aussi
         roles.add(userRole);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -71,4 +77,29 @@ public class AuthService {
 
         userRepository.save(user);
     }
+
+    @EventListener(ApplicationReadyEvent.class)
+// @PostConstruct
+    public void initDefaultUser() {
+        if (!userRepository.existsByEmail("contributeur@email.com")) {
+            User user = new User();
+            user.setEmail("contributeur@email.com");
+            user.setPassword(passwordEncoder.encode("123456"));
+            user.setNom("Contributeur");
+            user.setPrenom("Test");
+
+            Role role = roleRepository.findByName(ERole.ROLE_CONTRIBUTEUR)
+                    .orElseThrow(() -> new RuntimeException("Rôle CONTRIBUTOR non trouvé"));
+
+            user.setRoles(Set.of(role));
+            userRepository.save(user);
+
+            System.out.println("✅ Utilisateur test créé : contributeur@email.com / 123456");
+        }
+    }
+
+
+ 
+
+
 }
