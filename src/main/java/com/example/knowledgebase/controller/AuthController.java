@@ -30,7 +30,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.refreshToken(request));
     }
 
-    // ✅ Nouveau endpoint d'enregistrement avec validation
+    // Nouveau endpoint d'enregistrement avec validation
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody UserDto userDto) {
         User user = userMapper.toEntity(userDto); // conversion DTO -> entité

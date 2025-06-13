@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -58,27 +59,15 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors().and()
-                .csrf().disable()
-                .authorizeHttpRequests(authz -> authz
-                        // routes publiques
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/contribute/articles").permitAll() // 👈 test temporaire ici
-                        // règles protégées
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/moderation/**").hasAnyRole("MODERATEUR", "ADMIN")
-                        // ⚠ supprime ou commente TEMPORAIREMENT cette ligne pendant ton test
-                        // .requestMatchers("/api/contribute/**").hasAnyRole("CONTRIBUTEUR", "MODERATEUR", "ADMIN")
-                        .requestMatchers("/api/view/**").hasAnyRole("LECTEUR", "CONTRIBUTEUR", "MODERATEUR", "ADMIN")
-//                        .requestMatchers("/api/articles/**").hasAnyRole("CONTRIBUTEUR", "MODERATEUR", "ADMIN", "LECTEUR")
-                                .requestMatchers("/api/articles/**").permitAll() // si tu veux tester sans JWT
-
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/**").permitAll() // ⚠ Autorisation complète temporaire
                         .anyRequest().authenticated()
-                );
+                )
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 }

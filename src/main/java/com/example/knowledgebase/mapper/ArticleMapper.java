@@ -6,6 +6,7 @@ import com.example.knowledgebase.model.ArticleStatus;
 import com.example.knowledgebase.model.User;
 import org.springframework.stereotype.Component;
 
+
 @Component
 public class ArticleMapper {
 
@@ -18,6 +19,8 @@ public class ArticleMapper {
         dto.setModificationDate(article.getModificationDate());
         dto.setAuthorEmail(article.getAuthor().getEmail());
         dto.setStatus(article.getStatus().name()); // ✅ statut converti en String
+        dto.setIsDraft(article.isDraft()); // ✅ nouveau champ ajouté
+
         return dto;
     }
 
@@ -27,13 +30,17 @@ public class ArticleMapper {
         article.setContent(dto.getContent());
         article.setAuthor(author);
 
-        // ⚠️ Si status est présent dans le DTO, le convertir ; sinon valeur par défaut
-        if (dto.getStatus() != null) {
+        // ⚙️ Logique de statut selon isDraft
+        if (dto.isDraft()) {
+            article.setStatus(ArticleStatus.BROUILLON); // 🟡 statut automatique
+        } else if (dto.getStatus() != null) {
             article.setStatus(ArticleStatus.valueOf(dto.getStatus()));
         } else {
-            article.setStatus(ArticleStatus.EN_ATTENTE); // ✅ valeur par défaut
+            article.setStatus(ArticleStatus.EN_ATTENTE); // valeur par défaut
         }
 
+        article.setDraft(dto.isDraft()); // boolean simple
         return article;
     }
+
 }

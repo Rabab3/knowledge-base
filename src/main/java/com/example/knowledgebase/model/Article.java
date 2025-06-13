@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Article {
 
     @Enumerated(EnumType.STRING)
@@ -23,6 +22,12 @@ public class Article {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(nullable = false)
+    private boolean isDraft = false;
+
+    @Column(name = "file_name") // ✅ Ajout ici
+    private String fileName;
+
     private LocalDateTime creationDate;
     private LocalDateTime modificationDate;
 
@@ -30,3 +35,5 @@ public class Article {
     @JoinColumn(name = "author_id")
     private User author;
 }
+
+

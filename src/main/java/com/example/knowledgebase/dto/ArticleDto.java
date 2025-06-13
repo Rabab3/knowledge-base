@@ -13,4 +13,12 @@
         private LocalDateTime creationDate;
         private LocalDateTime modificationDate;
         private String authorEmail;
+        private boolean isDraft;
+
+        public void setIsDraft(boolean isDraft) {
+            this.isDraft = isDraft;
+        }
+
+
     }
+

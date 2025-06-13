@@ -2,25 +2,25 @@ package com.example.knowledgebase.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "favoris", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "article_id"})
-})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Favori {
+public class Commentaire {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private String content;
+
+    private LocalDateTime date;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "article_id", nullable = false)
+    private User author;
+
+    @ManyToOne(optional = false)
     private Article article;
 }
