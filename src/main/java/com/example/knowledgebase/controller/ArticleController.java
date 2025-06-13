@@ -4,6 +4,7 @@ import com.example.knowledgebase.dto.ArticleDto;
 import com.example.knowledgebase.dto.ArticleSearchRequest;
 import com.example.knowledgebase.model.Article;
 import com.example.knowledgebase.model.ArticleStatus;
+import com.example.knowledgebase.model.ArticleVersion;
 import com.example.knowledgebase.service.ArticleService;
 import com.example.knowledgebase.mapper.ArticleMapper;
 import lombok.RequiredArgsConstructor;
@@ -26,36 +27,29 @@ public class ArticleController {
     private final ArticleService articleService;
     private final ArticleMapper articleMapper;
 
-    /**
-     * Crée un article avec l’auteur authentifié ou "test-user" si auth désactivée.
-     */
     @PostMapping
     public ResponseEntity<ArticleDto> create(@RequestBody ArticleDto dto, Authentication auth) {
         String username = (auth != null) ? auth.getName() : "test-user";
         return ResponseEntity.ok(articleService.create(dto, username));
     }
 
-    /**
-     * Retourne les articles de l’auteur connecté.
-     */
+    @GetMapping("/{id}/versions")
+    public ResponseEntity<List<ArticleVersion>> getVersions(@PathVariable Long id) {
+        return ResponseEntity.ok(articleService.getVersionsByArticleId(id)); // utilise le service
+    }
+
     @GetMapping
     public ResponseEntity<List<ArticleDto>> getMine(Authentication auth) {
         String username = (auth != null) ? auth.getName() : "test-user";
         return ResponseEntity.ok(articleService.getByAuthor(username));
     }
 
-    /**
-     * Retourne les brouillons de l’auteur connecté.
-     */
     @GetMapping("/drafts")
     public ResponseEntity<List<ArticleDto>> getDrafts(Authentication auth) {
         String username = (auth != null) ? auth.getName() : "test-user";
         return ResponseEntity.ok(articleService.getDraftsByAuthor(username));
     }
 
-    /**
-     * Recherche avancée avec pagination.
-     */
     @PostMapping("/search")
     public ResponseEntity<Page<ArticleDto>> searchArticles(
             @RequestBody ArticleSearchRequest request,
@@ -71,5 +65,5 @@ public class ArticleController {
         Page<ArticleDto> dtoPage = resultPage.map(articleMapper::toDto);
         return ResponseEntity.ok(dtoPage);
     }
-
 }
+

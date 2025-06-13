@@ -5,11 +5,14 @@ import com.example.knowledgebase.dto.ArticleSearchRequest;
 import com.example.knowledgebase.mapper.ArticleMapper;
 import com.example.knowledgebase.model.Article;
 import com.example.knowledgebase.model.ArticleStatus;
+import com.example.knowledgebase.model.ArticleVersion;
 import com.example.knowledgebase.model.User;
 import com.example.knowledgebase.repository.ArticleRepository;
 import com.example.knowledgebase.repository.ArticleSpecification;
+import com.example.knowledgebase.repository.ArticleVersionRepository;
 import com.example.knowledgebase.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -40,6 +43,32 @@ public class ArticleService {
 
         return articleMapper.toDto(articleRepository.save(article));
     }
+
+    private final ArticleVersionRepository versionRepository;
+
+    public ArticleDto modifierArticle(Long articleId, ArticleDto updatedDto) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article non trouvé"));
+
+        // 👉 Sauvegarde de la version actuelle
+        ArticleVersion version = ArticleVersion.builder()
+                .titre(article.getTitle())
+                .contenu(article.getContent())
+                .status(article.getStatus())
+                .sauvegardéLe(LocalDateTime.now())
+                .article(article)
+                .auteur(article.getAuthor())
+                .build();
+        versionRepository.save(version);
+
+        // ✏️ Mise à jour de l'article
+        article.setTitle(updatedDto.getTitle());
+        article.setContent(updatedDto.getContent());
+        article.setModificationDate(LocalDateTime.now());
+
+        return articleMapper.toDto(articleRepository.save(article));
+    }
+
 
     /**
      * Retourne les articles de l’auteur.
