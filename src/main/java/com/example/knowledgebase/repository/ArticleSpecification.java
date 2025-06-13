@@ -38,4 +38,14 @@ public class ArticleSpecification {
         return (root, query, cb) ->
                 date != null ? cb.lessThanOrEqualTo(root.get("creationDate"), date) : null;
     }
+    public static Specification<Article> hasAuteurNom(String nom) {
+        return (root, query, cb) ->
+                StringUtils.hasText(nom) ? cb.like(cb.lower(root.get("author").get("nom")), "%" + nom.toLowerCase() + "%") : null;
+    }
+
+    public static Specification<Article> hasAuteurPrenom(String prenom) {
+        return (root, query, cb) ->
+                StringUtils.hasText(prenom) ? cb.like(cb.lower(root.get("author").get("prenom")), "%" + prenom.toLowerCase() + "%") : null;
+    }
+
 }

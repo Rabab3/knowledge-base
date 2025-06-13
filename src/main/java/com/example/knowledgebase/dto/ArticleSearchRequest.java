@@ -11,7 +11,8 @@ public class ArticleSearchRequest {
     private String contenu;
     private Long auteurId;
     private ArticleStatus status;
+    private String auteurNom;      // nouveau
+    private String auteurPrenom;   // nouveau
     private LocalDateTime createdAfter;
     private LocalDateTime createdBefore;
-
 }

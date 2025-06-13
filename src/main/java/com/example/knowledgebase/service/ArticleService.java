@@ -72,6 +72,8 @@ public class ArticleService {
                 .and(ArticleSpecification.hasContenu(request.getContenu()))
                 .and(ArticleSpecification.hasAuteur(request.getAuteurId()))
                 .and(ArticleSpecification.hasStatut(request.getStatus()))
+                .and(ArticleSpecification.hasAuteurNom(request.getAuteurNom()))
+                .and(ArticleSpecification.hasAuteurPrenom(request.getAuteurPrenom()))
                 .and(ArticleSpecification.createdAfter(request.getCreatedAfter()))
                 .and(ArticleSpecification.createdBefore(request.getCreatedBefore()));
 
