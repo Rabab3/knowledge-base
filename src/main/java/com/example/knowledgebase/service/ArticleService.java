@@ -55,7 +55,7 @@ public class ArticleService {
                 .titre(article.getTitle())
                 .contenu(article.getContent())
                 .status(article.getStatus())
-                .sauvegardéLe(LocalDateTime.now())
+                .sauvegardeLe(LocalDateTime.now())
                 .article(article)
                 .auteur(article.getAuthor())
                 .build();
@@ -108,6 +108,27 @@ public class ArticleService {
 
         return articleRepository.findAll(spec, pageable);
     }
+    public void supprimerArticleSiValide(Long articleId, String emailUtilisateur) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article non trouvé"));
+
+        if (article.getStatus() != ArticleStatus.VALIDE) {
+            throw new RuntimeException("Seuls les articles validés peuvent être supprimés.");
+        }
+
+        User user = userRepository.findByEmail(emailUtilisateur)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        boolean isModerateur = user.getRoles().stream()
+                .anyMatch(role -> role.getName().name().equals("ROLE_MODERATEUR"));
+
+        if (!isModerateur) {
+            throw new RuntimeException("Seul un modérateur peut supprimer un article validé.");
+        }
+
+        articleRepository.delete(article);
+    }
+
 
 
     /**
@@ -154,4 +175,12 @@ public class ArticleService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé : " + email));
     }
+    public List<ArticleVersion> getVersionsByArticleId(Long articleId) {
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new RuntimeException("Article non trouvé"));
+        return versionRepository.findByArticleOrderBySauvegardeLeDesc(article);
+
+    }
+
+
 }

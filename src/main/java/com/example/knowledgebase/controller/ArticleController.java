@@ -32,6 +32,13 @@ public class ArticleController {
         String username = (auth != null) ? auth.getName() : "test-user";
         return ResponseEntity.ok(articleService.create(dto, username));
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteArticle(@PathVariable Long id, Authentication auth) {
+        String email = (auth != null) ? auth.getName() : "test-user";
+        articleService.supprimerArticleSiValide(id, email);
+        return ResponseEntity.noContent().build();
+    }
+
 
     @GetMapping("/{id}/versions")
     public ResponseEntity<List<ArticleVersion>> getVersions(@PathVariable Long id) {

@@ -18,7 +18,8 @@ public class ArticleVersion {
 
     private String titre;
     private String contenu;
-    private LocalDateTime sauvegardéLe;
+    private LocalDateTime sauvegardeLe;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Article article;
