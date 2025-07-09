@@ -15,8 +15,8 @@ public class FavoriService {
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
 
-    public void toggleFavori(Long articleId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
+    public void toggleFavori(Long articleId, String username) {
+        User user = userRepository.findByUsername(username).orElseThrow();
         Article article = articleRepository.findById(articleId).orElseThrow();
 
         favoriRepository.findByUserAndArticle(user, article).ifPresentOrElse(
@@ -25,8 +25,8 @@ public class FavoriService {
         );
     }
 
-    public List<Article> getFavoris(String userEmail) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
+    public List<Article> getFavoris(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow();
         return favoriRepository.findByUser(user).stream()
                 .map(Favori::getArticle)
                 .toList();

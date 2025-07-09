@@ -19,9 +19,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
-
     @Column(nullable = false)
     private String password;
 
@@ -30,6 +27,14 @@ public class User {
 
     @Column(nullable = false)
     private String prenom;
+
+    @Column(nullable = false, unique = true)
+    private String username;
+
+    private String email;
+    private String telephone;
+    private String dateNaissance;
+    private String cin;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

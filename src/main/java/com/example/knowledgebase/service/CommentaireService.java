@@ -21,8 +21,8 @@ public class CommentaireService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    public Commentaire ajouterCommentaire(Long articleId, String email, String content) {
-        User auteur = userRepository.findByEmail(email).orElseThrow();
+    public Commentaire ajouterCommentaire(Long articleId, String username, String content) {
+        User auteur = userRepository.findByUsername(username).orElseThrow();
         Article article = articleRepository.findById(articleId).orElseThrow();
 
         Commentaire commentaire = new Commentaire();
@@ -32,7 +32,7 @@ public class CommentaireService {
         commentaire.setDate(LocalDateTime.now());
 
         // ✅ Notification si ce n’est pas l’auteur
-        if (!article.getAuthor().getEmail().equals(email)) {
+        if (!article.getAuthor().getUsername().equals(username)) {
             String message = "💬 Nouveau commentaire sur votre article : " + article.getTitle();
             notificationService.notifier(article.getAuthor(), message, article);
         }
@@ -40,4 +40,3 @@ public class CommentaireService {
         return commentaireRepository.save(commentaire);
     }
 }
-

@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -61,7 +62,34 @@ public class SecurityConfig {
                 .cors().and()
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").permitAll() // ⚠ Autorisation complète temporaire
+                        // --- Public access ---
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
+
+                        // --- Admin only ---
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users").hasRole("ADMIN")
+
+                        // --- Moderateur only ---
+                        .requestMatchers("/api/moderation/**").hasRole("MODERATEUR")
+
+                        // --- Contributeur only ---
+                        .requestMatchers("/api/contribute/**").hasRole("CONTRIBUTEUR")
+
+                        // --- Shared access to reading articles ---
+                        .requestMatchers(HttpMethod.GET, "/api/articles/**").hasAnyRole("ADMIN", "MODERATEUR", "CONTRIBUTEUR")
+
+                        // --- Comments, favorites, notifications ---
+                        .requestMatchers("/api/commentaires/**").hasAnyRole("ADMIN", "MODERATEUR", "CONTRIBUTEUR")
+                        .requestMatchers("/api/favoris/**").hasAnyRole("ADMIN", "MODERATEUR", "CONTRIBUTEUR")
+                        .requestMatchers("/api/notifications/**").hasAnyRole("ADMIN", "MODERATEUR", "CONTRIBUTEUR")
+
+                        // --- Themes access ---
+                        .requestMatchers("/api/themes/**").hasAnyRole("MODERATEUR", "ADMIN")
+
+                        // --- All other routes require authentication ---
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

@@ -21,8 +21,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.annotation.PostConstruct; // N'oublie pas cet import
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -35,41 +33,51 @@ public class AuthService {
 
     public JwtResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
         );
 
-        User user = userRepository.findByEmail(loginRequest.getEmail())
+        User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
         String accessToken = jwtUtils.generateToken(user);
         String refreshToken = jwtUtils.generateRefreshToken(user);
 
-        return new JwtResponse(accessToken, refreshToken);
+        // ➕ Ajouter ici le rôle principal
+        Role role = user.getRoles().stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("Aucun rôle trouvé"));
+
+        return new JwtResponse(accessToken, refreshToken, role.getName().name());
     }
 
-    public JwtResponse refreshToken(RefreshTokenRequest request) {
-        String email = jwtUtils.extractUsername(request.getRefreshToken());
 
-        User user = userRepository.findByEmail(email)
+
+    public JwtResponse refreshToken(RefreshTokenRequest request) {
+        String username = jwtUtils.extractUsername(request.getRefreshToken());
+
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        if (!jwtUtils.validateToken(request.getRefreshToken(), user)) {
+        if (!jwtUtils.validateToken(request.getRefreshToken())) {
             throw new RuntimeException("Refresh token invalide");
         }
 
         String newAccessToken = jwtUtils.generateToken(user);
-        return new JwtResponse(newAccessToken, request.getRefreshToken());
+
+        Role role = user.getRoles().stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("Aucun rôle trouvé"));
+
+        return new JwtResponse(newAccessToken, request.getRefreshToken(), role.getName().name());
     }
 
     public void register(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email déjà utilisé");
+        if (userRepository.existsByUsername(user.getUsername())) {
+            throw new RuntimeException("Nom d'utilisateur déjà utilisé");
         }
 
         Set<Role> roles = new HashSet<>();
-
         Role userRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                .orElseThrow(() -> new RuntimeException("Role ADMIN non trouvé")); // correction du message aussi
+                .orElseThrow(() -> new RuntimeException("Rôle ADMIN non trouvé"));
+
         roles.add(userRole);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -79,27 +87,66 @@ public class AuthService {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-// @PostConstruct
     public void initDefaultUser() {
-        if (!userRepository.existsByEmail("contributeur@email.com")) {
-            User user = new User();
-            user.setEmail("contributeur@email.com");
-            user.setPassword(passwordEncoder.encode("123456"));
-            user.setNom("Contributeur");
-            user.setPrenom("Test");
+        if (!userRepository.existsByUsername("admin")) {
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setNom("Admin");
+            admin.setPrenom("Super");
 
-            Role role = roleRepository.findByName(ERole.ROLE_CONTRIBUTEUR)
-                    .orElseThrow(() -> new RuntimeException("Rôle CONTRIBUTOR non trouvé"));
+            Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
+                    .orElseThrow(() -> new RuntimeException("Rôle ADMIN non trouvé"));
 
-            user.setRoles(Set.of(role));
-            userRepository.save(user);
+            admin.setRoles(Set.of(adminRole));
+            userRepository.save(admin);
+            System.out.println("✅ Utilisateur admin créé : admin / admin123");
+        }
 
-            System.out.println("✅ Utilisateur test créé : contributeur@email.com / 123456");
+        if (!userRepository.existsByUsername("moderator")) {
+            User mod = new User();
+            mod.setUsername("moderator");
+            mod.setPassword(passwordEncoder.encode("moderator123"));
+            mod.setNom("Moderateur");
+            mod.setPrenom("Compte");
+
+            Role modRole = roleRepository.findByName(ERole.ROLE_MODERATEUR)
+                    .orElseThrow(() -> new RuntimeException("Rôle MODERATEUR non trouvé"));
+
+            mod.setRoles(Set.of(modRole));
+            userRepository.save(mod);
+            System.out.println("✅ Utilisateur moderateur créé : moderator / moderator123");
+        }
+
+        if (!userRepository.existsByUsername("contributor")) {
+            User contrib = new User();
+            contrib.setUsername("contributor");
+            contrib.setPassword(passwordEncoder.encode("contributor123"));
+            contrib.setNom("Contributeur");
+            contrib.setPrenom("Compte");
+
+            Role contribRole = roleRepository.findByName(ERole.ROLE_CONTRIBUTEUR)
+                    .orElseThrow(() -> new RuntimeException("Rôle CONTRIBUTEUR non trouvé"));
+
+            contrib.setRoles(Set.of(contribRole));
+            userRepository.save(contrib);
+            System.out.println("✅ Utilisateur contributeur créé : contributor / contributor123");
+        }
+
+        if (!userRepository.existsByUsername("reader")) {
+            User reader = new User();
+            reader.setUsername("reader");
+            reader.setPassword(passwordEncoder.encode("reader123"));
+                reader.setNom("Lecteur");
+            reader.setPrenom("Compte");
+
+            Role readerRole = roleRepository.findByName(ERole.ROLE_LECTEUR)
+                    .orElseThrow(() -> new RuntimeException("Rôle LECTEUR non trouvé"));
+
+            reader.setRoles(Set.of(readerRole));
+            userRepository.save(reader);
+            System.out.println("✅ Utilisateur lecteur créé : reader / reader123");
         }
     }
-
-
- 
-
 
 }

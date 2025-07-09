@@ -3,7 +3,6 @@ package com.example.knowledgebase.controller;
 import com.example.knowledgebase.dto.ArticleDto;
 import com.example.knowledgebase.dto.ArticleSearchRequest;
 import com.example.knowledgebase.model.Article;
-import com.example.knowledgebase.model.ArticleStatus;
 import com.example.knowledgebase.model.ArticleVersion;
 import com.example.knowledgebase.service.ArticleService;
 import com.example.knowledgebase.mapper.ArticleMapper;
@@ -17,7 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/contribute/articles")
@@ -27,33 +25,43 @@ public class ArticleController {
     private final ArticleService articleService;
     private final ArticleMapper articleMapper;
 
+    private String resolveUsername(Authentication auth) {
+        if (auth == null || "anonymousUser".equals(auth.getName())) {
+            return "contributeur@email.com"; // utilisé dans Postman sans token
+        }
+        return auth.getName();
+    }
+
     @PostMapping
     public ResponseEntity<ArticleDto> create(@RequestBody ArticleDto dto, Authentication auth) {
-        String username = (auth != null) ? auth.getName() : "test-user";
+        String username = resolveUsername(auth);
         return ResponseEntity.ok(articleService.create(dto, username));
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteArticle(@PathVariable Long id, Authentication auth) {
-        String email = (auth != null) ? auth.getName() : "test-user";
+        String email = resolveUsername(auth);
         articleService.supprimerArticleSiValide(id, email);
         return ResponseEntity.noContent().build();
     }
 
-
     @GetMapping("/{id}/versions")
     public ResponseEntity<List<ArticleVersion>> getVersions(@PathVariable Long id) {
-        return ResponseEntity.ok(articleService.getVersionsByArticleId(id)); // utilise le service
+        return ResponseEntity.ok(articleService.getVersionsByArticleId(id));
     }
 
     @GetMapping
     public ResponseEntity<List<ArticleDto>> getMine(Authentication auth) {
-        String username = (auth != null) ? auth.getName() : "test-user";
-        return ResponseEntity.ok(articleService.getByAuthor(username));
+        String username = resolveUsername(auth);
+        List<ArticleDto> articles = articleService.getByAuthor(username);
+        System.out.println("📥 Requête GET /contribute/articles par " + username + " → " + articles.size() + " articles");
+        return ResponseEntity.ok(articles);
     }
+
 
     @GetMapping("/drafts")
     public ResponseEntity<List<ArticleDto>> getDrafts(Authentication auth) {
-        String username = (auth != null) ? auth.getName() : "test-user";
+        String username = resolveUsername(auth);
         return ResponseEntity.ok(articleService.getDraftsByAuthor(username));
     }
 
@@ -73,4 +81,3 @@ public class ArticleController {
         return ResponseEntity.ok(dtoPage);
     }
 }
-

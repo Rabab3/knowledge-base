@@ -14,6 +14,8 @@
         private LocalDateTime modificationDate;
         private String authorEmail;
         private boolean isDraft;
+        private String auteur; // ✅ Nom d'utilisateur de l’auteur (username)
+
 
         public void setIsDraft(boolean isDraft) {
             this.isDraft = isDraft;

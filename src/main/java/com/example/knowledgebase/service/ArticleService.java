@@ -3,16 +3,9 @@ package com.example.knowledgebase.service;
 import com.example.knowledgebase.dto.ArticleDto;
 import com.example.knowledgebase.dto.ArticleSearchRequest;
 import com.example.knowledgebase.mapper.ArticleMapper;
-import com.example.knowledgebase.model.Article;
-import com.example.knowledgebase.model.ArticleStatus;
-import com.example.knowledgebase.model.ArticleVersion;
-import com.example.knowledgebase.model.User;
-import com.example.knowledgebase.repository.ArticleRepository;
-import com.example.knowledgebase.repository.ArticleSpecification;
-import com.example.knowledgebase.repository.ArticleVersionRepository;
-import com.example.knowledgebase.repository.UserRepository;
+import com.example.knowledgebase.model.*;
+import com.example.knowledgebase.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,28 +22,33 @@ public class ArticleService {
     private final UserRepository userRepository;
     private final ArticleMapper articleMapper;
     private final NotificationService notificationService;
+    private final ArticleVersionRepository versionRepository;
 
     /**
      * Crée un nouvel article.
      */
-    public ArticleDto create(ArticleDto dto, String email) {
-        User author = getOrFakeUser(email);
+    public ArticleDto create(ArticleDto dto, String username) {
+        User author = getOrFakeUser(username);
 
         Article article = articleMapper.toEntity(dto, author);
         article.setCreationDate(LocalDateTime.now());
         article.setModificationDate(null);
-        article.setStatus(ArticleStatus.EN_ATTENTE);
+
+        if (dto.getStatus() != null) {
+            article.setStatus(ArticleStatus.valueOf(dto.getStatus()));
+        } else {
+            article.setStatus(ArticleStatus.EN_ATTENTE);
+        }
+
+        article.setDraft(article.getStatus() == ArticleStatus.BROUILLON);
 
         return articleMapper.toDto(articleRepository.save(article));
     }
-
-    private final ArticleVersionRepository versionRepository;
 
     public ArticleDto modifierArticle(Long articleId, ArticleDto updatedDto) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new RuntimeException("Article non trouvé"));
 
-        // 👉 Sauvegarde de la version actuelle
         ArticleVersion version = ArticleVersion.builder()
                 .titre(article.getTitle())
                 .contenu(article.getContent())
@@ -61,7 +59,6 @@ public class ArticleService {
                 .build();
         versionRepository.save(version);
 
-        // ✏️ Mise à jour de l'article
         article.setTitle(updatedDto.getTitle());
         article.setContent(updatedDto.getContent());
         article.setModificationDate(LocalDateTime.now());
@@ -69,32 +66,22 @@ public class ArticleService {
         return articleMapper.toDto(articleRepository.save(article));
     }
 
-
-    /**
-     * Retourne les articles de l’auteur.
-     */
-    public List<ArticleDto> getByAuthor(String email) {
-        User author = getOrFakeUser(email);
-
-        return articleRepository.findByAuthor(author).stream()
+    public List<ArticleDto> getByAuthor(String username) {
+        User author = getOrFakeUser(username);
+        List<ArticleDto> articles = articleRepository.findByAuthor(author).stream()
                 .map(articleMapper::toDto)
                 .toList();
+        System.out.println("🔍 getByAuthor : " + username + " → " + articles.size() + " article(s)");
+        return articles;
     }
 
-    /**
-     * Retourne les brouillons d’un auteur.
-     */
-    public List<ArticleDto> getDraftsByAuthor(String email) {
-        User author = getOrFakeUser(email);
-
+    public List<ArticleDto> getDraftsByAuthor(String username) {
+        User author = getOrFakeUser(username);
         return articleRepository.findByAuthorAndIsDraftTrue(author).stream()
                 .map(articleMapper::toDto)
                 .toList();
     }
 
-    /**
-     * Effectue une recherche avancée avec pagination et filtres.
-     */
     public Page<Article> searchArticles(ArticleSearchRequest request, Pageable pageable) {
         Specification<Article> spec = Specification
                 .where(ArticleSpecification.hasTitre(request.getTitre()))
@@ -108,7 +95,8 @@ public class ArticleService {
 
         return articleRepository.findAll(spec, pageable);
     }
-    public void supprimerArticleSiValide(Long articleId, String emailUtilisateur) {
+
+    public void supprimerArticleSiValide(Long articleId, String username) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new RuntimeException("Article non trouvé"));
 
@@ -116,7 +104,7 @@ public class ArticleService {
             throw new RuntimeException("Seuls les articles validés peuvent être supprimés.");
         }
 
-        User user = userRepository.findByEmail(emailUtilisateur)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
         boolean isModerateur = user.getRoles().stream()
@@ -129,11 +117,6 @@ public class ArticleService {
         articleRepository.delete(article);
     }
 
-
-
-    /**
-     * Marque un article comme retourné pour correction.
-     */
     public ArticleDto retournerAvecCommentaire(Long id, String message) {
         Article article = articleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Article non trouvé"));
@@ -142,15 +125,11 @@ public class ArticleService {
         article.setModificationDate(LocalDateTime.now());
         articleRepository.save(article);
 
-        // 🔔 Notification à l’auteur
         notificationService.notifier(article.getAuthor(), "✏️ Article retourné : " + message, article);
 
         return articleMapper.toDto(article);
     }
 
-    /**
-     * Marque un article comme validé.
-     */
     public ArticleDto validerAvecNotification(Long articleId) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new RuntimeException("Article non trouvé"));
@@ -158,7 +137,6 @@ public class ArticleService {
         article.setStatus(ArticleStatus.VALIDE);
         article.setModificationDate(LocalDateTime.now());
 
-        // 🔔 Notification à l’auteur
         notificationService.notifier(
                 article.getAuthor(),
                 "✅ Votre article a été validé : " + article.getTitle(),
@@ -168,19 +146,35 @@ public class ArticleService {
         return articleMapper.toDto(articleRepository.save(article));
     }
 
-    /**
-     * Utilise un utilisateur de test si nécessaire (sans auth réelle).
-     */
-    private User getOrFakeUser(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé : " + email));
+    private User getOrFakeUser(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé : " + username));
     }
+
     public List<ArticleVersion> getVersionsByArticleId(Long articleId) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new RuntimeException("Article non trouvé"));
         return versionRepository.findByArticleOrderBySauvegardeLeDesc(article);
-
     }
 
+    public List<ArticleDto> getByStatus(ArticleStatus status) {
+        return articleRepository.findByStatus(status)
+                .stream()
+                .map(articleMapper::toDto)
+                .toList();
+    }
 
+    public List<ArticleDto> getArticlesByStatus(String status) {
+        ArticleStatus statut;
+        try {
+            statut = ArticleStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Statut invalide : " + status);
+        }
+
+        return articleRepository.findByStatus(statut)
+                .stream()
+                .map(articleMapper::toDto)
+                .toList();
+    }
 }

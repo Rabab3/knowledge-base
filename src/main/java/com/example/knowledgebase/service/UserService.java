@@ -3,8 +3,8 @@ package com.example.knowledgebase.service;
 import com.example.knowledgebase.dto.UserDto;
 import com.example.knowledgebase.mapper.UserMapper;
 import com.example.knowledgebase.model.*;
-        import com.example.knowledgebase.repository.*;
-        import jakarta.transaction.Transactional;
+import com.example.knowledgebase.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,11 +33,14 @@ public class UserService {
     }
 
     public UserDto save(UserDto dto, String rawPassword) {
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("Email déjà utilisé");
+        if (userRepository.existsByUsername(dto.getUsername())) {
+            throw new IllegalArgumentException("Nom d’utilisateur déjà utilisé");
         }
+
         User user = new User();
-        user.setEmail(dto.getEmail());
+        user.setUsername(dto.getUsername());
+        user.setNom(dto.getNom());
+        user.setPrenom(dto.getPrenom());
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setRoles(getRolesFromStrings(dto.getRoles()));
         return userMapper.toDto(userRepository.save(user));
@@ -47,10 +50,26 @@ public class UserService {
     public UserDto update(Long id, UserDto dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Utilisateur non trouvé"));
+
+        user.setUsername(dto.getUsername());
+        user.setNom(dto.getNom());
+        user.setPrenom(dto.getPrenom());
         user.setEmail(dto.getEmail());
+        user.setTelephone(dto.getTelephone());
+        user.setDateNaissance(dto.getDateNaissance());
+        user.setCin(dto.getCin());
         user.setRoles(getRolesFromStrings(dto.getRoles()));
+
         return userMapper.toDto(user);
     }
+
+    @Transactional
+    public void updatePassword(Long id, String rawPassword) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Utilisateur non trouvé"));
+        user.setPassword(passwordEncoder.encode(rawPassword));
+    }
+
 
     public void delete(Long id) {
         userRepository.deleteById(id);

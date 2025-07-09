@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-        import java.util.List;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -36,6 +36,13 @@ public class UserController {
     public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto dto) {
         return ResponseEntity.ok(userService.update(id, dto));
     }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> updatePassword(@PathVariable Long id, @RequestBody String newPassword) {
+        userService.updatePassword(id, newPassword);
+        return ResponseEntity.ok("Mot de passe mis à jour");
+    }
+    
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {

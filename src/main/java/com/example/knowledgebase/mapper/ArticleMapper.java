@@ -6,7 +6,6 @@ import com.example.knowledgebase.model.ArticleStatus;
 import com.example.knowledgebase.model.User;
 import org.springframework.stereotype.Component;
 
-
 @Component
 public class ArticleMapper {
 
@@ -17,9 +16,13 @@ public class ArticleMapper {
         dto.setContent(article.getContent());
         dto.setCreationDate(article.getCreationDate());
         dto.setModificationDate(article.getModificationDate());
-        dto.setAuthorEmail(article.getAuthor().getEmail());
-        dto.setStatus(article.getStatus().name()); // ✅ statut converti en String
-        dto.setIsDraft(article.isDraft()); // ✅ nouveau champ ajouté
+        dto.setStatus(article.getStatus().name());  // ✅ enum to String
+        dto.setIsDraft(article.isDraft());          // ✅ bool isDraft
+
+        // ✅ Ajout de l'auteur (username)
+        if (article.getAuthor() != null) {
+            dto.setAuteur(article.getAuthor().getUsername());
+        }
 
         return dto;
     }
@@ -30,17 +33,10 @@ public class ArticleMapper {
         article.setContent(dto.getContent());
         article.setAuthor(author);
 
-        // ⚙️ Logique de statut selon isDraft
-        if (dto.isDraft()) {
-            article.setStatus(ArticleStatus.BROUILLON); // 🟡 statut automatique
-        } else if (dto.getStatus() != null) {
-            article.setStatus(ArticleStatus.valueOf(dto.getStatus()));
-        } else {
-            article.setStatus(ArticleStatus.EN_ATTENTE); // valeur par défaut
-        }
+        // ✅ Le statut sera défini dans ArticleService.create()
+        article.setStatus(ArticleStatus.EN_ATTENTE);
+        article.setDraft(false);
 
-        article.setDraft(dto.isDraft()); // boolean simple
         return article;
     }
-
 }

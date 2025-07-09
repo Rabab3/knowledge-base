@@ -34,8 +34,8 @@ public class NotificationService {
         // 🔁 Conversion pour l'envoi SSE
         NotificationDto dto = new NotificationDto(message, article);
 
-        // 🔔 Envoi en temps réel via SSE
-        emitterService.sendNotification(destinataire.getEmail(), dto);
+        // 🔔 Envoi en temps réel via SSE (avec username maintenant)
+        emitterService.sendNotification(destinataire.getUsername(), dto);
     }
 
     /**

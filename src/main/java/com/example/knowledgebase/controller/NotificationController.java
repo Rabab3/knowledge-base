@@ -24,18 +24,17 @@ public class NotificationController {
 
     @GetMapping
     public List<Notification> getMyNotifications(Authentication auth) {
-        String email = (auth != null) ? auth.getName() : "contributeur@email.com";
-        User user = userRepository.findByEmail(email).orElseThrow();
+        String username = (auth != null) ? auth.getName() : "admin"; // ou utilisateur de test
+        User user = userRepository.findByUsername(username).orElseThrow();
         return notificationService.getByUser(user);
     }
 
     @GetMapping("/stream")
-    public SseEmitter stream(@RequestParam String email, HttpServletResponse response) {
+    public SseEmitter stream(@RequestParam String username, HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store");
-        response.setHeader("X-Accel-Buffering", "no"); // utile si tu testes derrière nginx
-        response.setHeader("Access-Control-Allow-Origin", "http://localhost:4200"); // OU "*" pour tests
+        response.setHeader("X-Accel-Buffering", "no");
+        response.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
 
-        return notificationEmitterService.listen(email);
+        return notificationEmitterService.listen(username);
     }
-
 }

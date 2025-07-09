@@ -17,50 +17,51 @@ public class NotificationEmitterService {
 
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-    public SseEmitter listen(String email) {
+    public SseEmitter listen(String username) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        emitters.put(email, emitter);
-        emitter.onCompletion(() -> emitters.remove(email));
-        emitter.onTimeout(() -> emitters.remove(email));
+        emitters.put(username, emitter);
+        emitter.onCompletion(() -> emitters.remove(username));
+        emitter.onTimeout(() -> emitters.remove(username));
 
         // ➕ Optionnel : envoyer un ping de bienvenue
         try {
             emitter.send(SseEmitter.event().name("connected").data("🔔 Connexion établie"));
         } catch (IOException e) {
-            emitters.remove(email);
+            emitters.remove(username);
         }
 
         return emitter;
     }
 
     public void notifier(User destinataire, String message, Article article) {
-        SseEmitter emitter = emitters.get(destinataire.getEmail());
+        String username = destinataire.getUsername();
+        SseEmitter emitter = emitters.get(username);
         if (emitter != null) {
             try {
                 NotificationDto notif = new NotificationDto(message, article);
                 emitter.send(SseEmitter.event()
                         .name("notification")
                         .data(notif));
-                log.info("✅ Notification envoyée à {}", destinataire.getEmail());
+                log.info("✅ Notification envoyée à {}", username);
             } catch (IOException e) {
-                emitters.remove(destinataire.getEmail());
-                log.warn("❌ Erreur d'envoi de notification à {} : {}", destinataire.getEmail(), e.getMessage());
+                emitters.remove(username);
+                log.warn("❌ Erreur d'envoi de notification à {} : {}", username, e.getMessage());
             }
         } else {
-            log.warn("⚠️ Aucun emitter trouvé pour {}", destinataire.getEmail());
+            log.warn("⚠️ Aucun emitter trouvé pour {}", username);
         }
     }
-    public void sendNotification(String email, NotificationDto dto) {
-        SseEmitter emitter = emitters.get(email);
+
+    public void sendNotification(String username, NotificationDto dto) {
+        SseEmitter emitter = emitters.get(username);
         if (emitter != null) {
             try {
                 emitter.send(SseEmitter.event()
                         .name("notification")
                         .data(dto));
             } catch (IOException e) {
-                emitters.remove(email);
+                emitters.remove(username);
             }
         }
     }
-
 }
