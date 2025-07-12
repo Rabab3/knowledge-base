@@ -45,13 +45,14 @@ public class ArticleService {
         return articleMapper.toDto(articleRepository.save(article));
     }
 
+
     public ArticleDto modifierArticle(Long articleId, ArticleDto updatedDto) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new RuntimeException("Article non trouvé"));
 
         ArticleVersion version = ArticleVersion.builder()
-                .titre(article.getTitle())
-                .contenu(article.getContent())
+                .titre(article.getTitre()) // ✅
+                .contenu(article.getContenu()) // ✅
                 .status(article.getStatus())
                 .sauvegardeLe(LocalDateTime.now())
                 .article(article)
@@ -59,12 +60,13 @@ public class ArticleService {
                 .build();
         versionRepository.save(version);
 
-        article.setTitle(updatedDto.getTitle());
-        article.setContent(updatedDto.getContent());
+        article.setTitre(updatedDto.getTitre()); // ✅
+        article.setContenu(updatedDto.getContenu()); // ✅
         article.setModificationDate(LocalDateTime.now());
 
         return articleMapper.toDto(articleRepository.save(article));
     }
+
 
     public List<ArticleDto> getByAuthor(String username) {
         User author = getOrFakeUser(username);
@@ -139,7 +141,7 @@ public class ArticleService {
 
         notificationService.notifier(
                 article.getAuthor(),
-                "✅ Votre article a été validé : " + article.getTitle(),
+                "✅ Votre article a été validé : " + article.getTitre(), // ✅
                 article
         );
 

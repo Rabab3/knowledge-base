@@ -48,7 +48,7 @@ public class DataInitializer {
                 admin.getRoles().add(adminRole.get());
 
                 userRepository.save(admin);
-                System.out.println("✅ Utilisateur admin ajouté : admin / admin123");
+                System.out.println("✅ Utilisateur admin ajouté : admine / admin1223");
             }
         }
     }

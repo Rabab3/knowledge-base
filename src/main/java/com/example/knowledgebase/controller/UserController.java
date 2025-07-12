@@ -42,7 +42,12 @@ public class UserController {
         userService.updatePassword(id, newPassword);
         return ResponseEntity.ok("Mot de passe mis à jour");
     }
-    
+
+    @PatchMapping("/{id}/role")
+    public ResponseEntity<UserDto> updateUserRole(@PathVariable Long id, @RequestBody String nouveauRole) {
+        return ResponseEntity.ok(userService.updateUserRole(id, nouveauRole));
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {

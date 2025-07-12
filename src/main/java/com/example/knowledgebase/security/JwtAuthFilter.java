@@ -33,55 +33,46 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         String method = request.getMethod();
 
-        System.out.println("⇨ PATH : " + method + " " + path);
-
-        if (
-                (method.equals("POST") && (
-                        path.equals("/api/articles") ||
-                                path.equals("/api/contribute/articles")
-                )) ||
-                        (method.equals("GET") && path.startsWith("/api/articles")) ||
-                        path.startsWith("/api/themes") ||
-                        path.startsWith("/api/auth") ||
-                        path.startsWith("/api/public")
-        ) {
+        // 🚫 Ne jamais filtrer les routes publiques
+        if (path.startsWith("/api/auth") || path.startsWith("/api/public")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
-        System.out.println("TOKEN REÇU : " + jwt);
-
+        final String jwt = authHeader.substring(7);
         try {
-            Claims claims = jwtUtils.extractAllClaims(jwt); // ✅ remplacé JwtService
+            Claims claims = jwtUtils.extractAllClaims(jwt);
             String username = claims.getSubject();
-            System.out.println("USERNAME EXTRAIT : " + username);
-
-            @SuppressWarnings("unchecked")
-            List<String> roles = claims.get("roles", List.class);
-
-            Set<GrantedAuthority> authorities = roles.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toSet());
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                @SuppressWarnings("unchecked")
+                List<String> roles = claims.get("roles", List.class);
+
+                Set<GrantedAuthority> authorities = roles.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toSet());
+
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(username, null, authorities);
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                System.out.println("AUTORISATIONS ATTRIBUÉES : " + authorities);
+
+                System.out.println("✅ Utilisateur authentifié : " + username);
+                System.out.println("🔐 Rôles reconnus : " + authorities);
             }
 
         } catch (Exception e) {
-            System.out.println("Erreur lors de la validation du token : " + e.getMessage());
+            System.out.println("❌ Erreur de validation JWT : " + e.getMessage());
+            // Optionnel : tu peux aussi forcer une 403 ici si tu veux bloquer la requête immédiatement :
+            // response.sendError(HttpServletResponse.SC_FORBIDDEN, "Token invalide");
+            // return;
         }
 
         filterChain.doFilter(request, response);

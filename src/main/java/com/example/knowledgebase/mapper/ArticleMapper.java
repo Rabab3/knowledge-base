@@ -12,14 +12,17 @@ public class ArticleMapper {
     public ArticleDto toDto(Article article) {
         ArticleDto dto = new ArticleDto();
         dto.setArticleId(article.getArticleId());
-        dto.setTitle(article.getTitle());
-        dto.setContent(article.getContent());
+        dto.setTitre(article.getTitre());
+        dto.setContenu(article.getContenu());
         dto.setCreationDate(article.getCreationDate());
         dto.setModificationDate(article.getModificationDate());
-        dto.setStatus(article.getStatus().name());  // ✅ enum to String
-        dto.setIsDraft(article.isDraft());          // ✅ bool isDraft
 
-        // ✅ Ajout de l'auteur (username)
+        if (article.getStatus() != null) {
+            dto.setStatus(article.getStatus().name());
+        }
+
+        dto.setIsDraft(article.isDraft());
+
         if (article.getAuthor() != null) {
             dto.setAuteur(article.getAuthor().getUsername());
         }
@@ -29,13 +32,23 @@ public class ArticleMapper {
 
     public Article toEntity(ArticleDto dto, User author) {
         Article article = new Article();
-        article.setTitle(dto.getTitle());
-        article.setContent(dto.getContent());
+        article.setTitre(dto.getTitre());
+        article.setContenu(dto.getContenu());
         article.setAuthor(author);
+        article.setDraft(dto.isDraft());
 
-        // ✅ Le statut sera défini dans ArticleService.create()
-        article.setStatus(ArticleStatus.EN_ATTENTE);
-        article.setDraft(false);
+        // ✅ Ajout d'une vérification sécurisée
+        if (dto.getStatus() != null) {
+            try {
+                article.setStatus(ArticleStatus.valueOf(dto.getStatus()));
+            } catch (IllegalArgumentException e) {
+                System.out.println("⚠️ Statut inconnu : " + dto.getStatus());
+                article.setStatus(ArticleStatus.EN_ATTENTE); // Valeur par défaut
+            }
+        } else {
+            System.out.println("⚠️ Aucun statut reçu, valeur par défaut appliquée.");
+            article.setStatus(ArticleStatus.EN_ATTENTE); // Valeur par défaut
+        }
 
         return article;
     }

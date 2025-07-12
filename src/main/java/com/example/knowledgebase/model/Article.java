@@ -3,7 +3,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-
 @Entity
 @Data
 @NoArgsConstructor
@@ -17,15 +16,16 @@ public class Article {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long articleId;
 
-    private String title;
+    @Column(name = "title")
+    private String titre;
 
-    @Column(columnDefinition = "TEXT")
-    private String content;
+    @Column(columnDefinition = "TEXT", name = "content")
+    private String contenu;
 
     @Column(nullable = false)
     private boolean isDraft = false;
 
-    @Column(name = "file_name") // ✅ Ajout ici
+    @Column(name = "file_name")
     private String fileName;
 
     private LocalDateTime creationDate;

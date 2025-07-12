@@ -33,7 +33,7 @@ public class CommentaireService {
 
         // ✅ Notification si ce n’est pas l’auteur
         if (!article.getAuthor().getUsername().equals(username)) {
-            String message = "💬 Nouveau commentaire sur votre article : " + article.getTitle();
+            String message = "💬 Nouveau commentaire sur votre article : " + article.getTitre();
             notificationService.notifier(article.getAuthor(), message, article);
         }
 

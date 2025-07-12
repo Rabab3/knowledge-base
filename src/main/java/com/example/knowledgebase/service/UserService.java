@@ -45,6 +45,19 @@ public class UserService {
         user.setRoles(getRolesFromStrings(dto.getRoles()));
         return userMapper.toDto(userRepository.save(user));
     }
+    @Transactional
+    public UserDto updateUserRole(Long id, String nouveauRole) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Utilisateur non trouvé"));
+
+        ERole roleEnum = ERole.valueOf(nouveauRole);
+        Role role = roleRepository.findByName(roleEnum)
+                .orElseThrow(() -> new NoSuchElementException("Rôle non trouvé"));
+
+        user.setRoles(Set.of(role));  // ⚠️ Remplace tous les rôles existants
+        return userMapper.toDto(user);
+    }
+
 
     @Transactional
     public UserDto update(Long id, UserDto dto) {

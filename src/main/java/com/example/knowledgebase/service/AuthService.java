@@ -140,6 +140,8 @@ public class AuthService {
                 reader.setNom("Lecteur");
             reader.setPrenom("Compte");
 
+
+
             Role readerRole = roleRepository.findByName(ERole.ROLE_LECTEUR)
                     .orElseThrow(() -> new RuntimeException("Rôle LECTEUR non trouvé"));
 
