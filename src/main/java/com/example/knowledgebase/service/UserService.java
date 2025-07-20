@@ -89,6 +89,10 @@ public class UserService {
     }
 
     private Set<Role> getRolesFromStrings(Set<String> roleNames) {
+        if (roleNames == null || roleNames.isEmpty()) {
+            throw new IllegalArgumentException("Le champ roles est requis et ne peut pas être vide");
+        }
+
         Set<Role> roles = new HashSet<>();
         for (String roleName : roleNames) {
             ERole roleEnum = ERole.valueOf(roleName);
@@ -98,4 +102,5 @@ public class UserService {
         }
         return roles;
     }
+
 }

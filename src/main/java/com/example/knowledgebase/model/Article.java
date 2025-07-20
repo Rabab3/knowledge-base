@@ -1,20 +1,22 @@
 package com.example.knowledgebase.model;
+
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Article {
 
-    @Enumerated(EnumType.STRING)
-    private ArticleStatus status;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long articleId;
+
+    @Enumerated(EnumType.STRING)
+    private ArticleStatus status;
 
     @Column(name = "title")
     private String titre;
@@ -31,9 +33,15 @@ public class Article {
     private LocalDateTime creationDate;
     private LocalDateTime modificationDate;
 
+    // ✅ Champs pour retour du modérateur
+    @Column(name = "retour_commentaire")
+    private String retourCommentaire;
+
+    @Column(name = "date_retour")
+    private LocalDateTime dateRetour;
+
+    // ✅ Auteur de l'article
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private User author;
 }
-
-

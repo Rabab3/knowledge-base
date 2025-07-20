@@ -2,6 +2,7 @@ package com.example.knowledgebase.controller;
 
 import com.example.knowledgebase.dto.UserDto;
 import com.example.knowledgebase.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,7 +29,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto dto, @RequestParam String password) {
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto dto, @RequestParam String password) {
         return ResponseEntity.ok(userService.save(dto, password));
     }
 

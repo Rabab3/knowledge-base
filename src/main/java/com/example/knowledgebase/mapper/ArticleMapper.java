@@ -16,6 +16,8 @@ public class ArticleMapper {
         dto.setContenu(article.getContenu());
         dto.setCreationDate(article.getCreationDate());
         dto.setModificationDate(article.getModificationDate());
+        dto.setRetourCommentaire(article.getRetourCommentaire());
+
 
         if (article.getStatus() != null) {
             dto.setStatus(article.getStatus().name());
@@ -36,6 +38,8 @@ public class ArticleMapper {
         article.setContenu(dto.getContenu());
         article.setAuthor(author);
         article.setDraft(dto.isDraft());
+        article.setRetourCommentaire(dto.getRetourCommentaire());
+
 
         // ✅ Ajout d'une vérification sécurisée
         if (dto.getStatus() != null) {

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,6 +45,25 @@ public class ArticleService {
 
         return articleMapper.toDto(articleRepository.save(article));
     }
+
+    public ArticleDto updateByContributeur(Long id, ArticleDto dto, String username) {
+        Article existing = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Article non trouvé"));
+
+        if (!existing.getAuthor().getUsername().equals(username)) {
+            throw new AccessDeniedException("Vous ne pouvez modifier que vos propres articles.");
+        }
+
+        existing.setContenu(dto.getContenu());
+        existing.setStatus(ArticleStatus.EN_ATTENTE);
+        existing.setRetourCommentaire(null);
+        existing.setDateRetour(null);
+        existing.setModificationDate(LocalDateTime.now());
+
+        articleRepository.save(existing);
+        return articleMapper.toDto(existing);
+    }
+
 
 
     public ArticleDto modifierArticle(Long articleId, ArticleDto updatedDto) {
@@ -125,12 +145,16 @@ public class ArticleService {
 
         article.setStatus(ArticleStatus.A_CORRIGER);
         article.setModificationDate(LocalDateTime.now());
+        article.setRetourCommentaire(message); // ✅ AJOUTER CECI
+        article.setDateRetour(LocalDateTime.now()); // ✅ AJOUTER CECI
+
         articleRepository.save(article);
 
         notificationService.notifier(article.getAuthor(), "✏️ Article retourné : " + message, article);
 
         return articleMapper.toDto(article);
     }
+
 
     public ArticleDto validerAvecNotification(Long articleId) {
         Article article = articleRepository.findById(articleId)
@@ -165,6 +189,18 @@ public class ArticleService {
                 .map(articleMapper::toDto)
                 .toList();
     }
+    public ArticleDto getByIdIfAuthor(Long id, String username) {
+        Article article = articleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Article non trouvé"));
+
+        if (!article.getAuthor().getUsername().equals(username)) {
+            throw new AccessDeniedException("Vous ne pouvez consulter que vos propres articles.");
+        }
+
+        return articleMapper.toDto(article);
+    }
+
+
 
     public List<ArticleDto> getArticlesByStatus(String status) {
         ArticleStatus statut;
